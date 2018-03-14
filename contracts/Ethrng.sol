@@ -34,7 +34,8 @@ contract Ethrng {
 	uint256 public flag;
 	// 创建活动
 	function newCampaign(uint32 _bnum, uint96 _deposit, uint256 _target)
-		payable  {
+		payable  
+		{
 			uint256 _campaignID = campaigns.length++;
 			Campaign c = campaigns[_campaignID];
 			numCampaigns++;
@@ -46,9 +47,20 @@ contract Ethrng {
 			c.consumers[msg.sender] = Consumer(msg.sender, msg.value);
 	}
 
-	modifier checkDeposit(uint256 _deposit) { if (msg.value != _deposit) throw; _; } // 检查押金
-	modifier checkTime(uint256 _bnum) {if (block.number >_bnum) throw; _;} // 检查提交时间
-	modifier beFalse(bool _t) { if (_t) throw; _; } // 判断是否为假
+	modifier checkDeposit(uint256 _deposit) { 
+		if (msg.value != _deposit) 
+			throw;
+		_; 
+	} // 检查押金
+	modifier checkTime(uint256 _bnum) {
+		if (block.number > _bnum) 
+			throw; 
+		_;
+	} // 检查提交时间
+	modifier beFalse(bool _t) { 
+		if (_t) 
+			throw; 
+		_; } // 判断是否为假
 
 	// 参与者提交随机数
 	function commit(uint256 _campaignID, bytes32 _s) external payable {
@@ -65,7 +77,8 @@ contract Ethrng {
 		) checkDeposit(c.deposit)
 		checkTime(c.bnum)
 		beFalse(c.participants[msg.sender].partaken)
-		internal {
+		internal 
+		{
 			c.number++;
 			uint256 num = c.number;
 			//c.secret[num] = _s;
@@ -75,12 +88,17 @@ contract Ethrng {
 
 	//是否为发起者
 	modifier beConsumer(address _caddr) {
-		if (_caddr != msg.sender) throw;
+		if (_caddr != msg.sender) 
+			throw;
 		_;
 	}
 
 	//提交随机数是否结束
-	modifier bountyPhase(uint256 _bnum) { if (block.number <= _bnum) throw; _; }
+	modifier bountyPhase(uint256 _bnum) { 
+		if (block.number <= _bnum) 
+			throw; 
+		_; 
+	}
 
 	/*----------------
 	计算过程开始
@@ -88,7 +106,8 @@ contract Ethrng {
 
 	// 计算阶乘
 	function countFactorial(uint256 natural)
-		internal returns(uint256) {
+		internal returns(uint256) 
+		{
 			uint256 factorial = 1;
 			if (natural == 0 && natural == 1)
 				return factorial;
@@ -96,11 +115,12 @@ contract Ethrng {
 				factorial *= i;
 			}
 			return factorial;
-	}
+		}
 
 	// 计算组合数 C(n, m)
 	function countCombinationNo(uint256 numParticipant, uint256 numSelected)
-		internal returns(uint256) {
+		internal returns(uint256) 
+		{
 			uint256 up = countFactorial(numParticipant); // 分子
 			uint256 down = countFactorial(numSelected)*countFactorial(numParticipant - numSelected); // 分母
 			uint256 numCombination = up / down;
@@ -109,7 +129,8 @@ contract Ethrng {
 
 	// 计算选中的参与者排列
 	function selectedCombination(uint256 numParticipant, uint256 numSelected, uint256 blockHash)
-		internal returns(uint256) {
+		internal returns(uint256) 
+		{
 			uint256 numCombination = countCombinationNo(numParticipant, numSelected);
 			uint256 newHash = blockHash % numCombination;
 			uint256 countNo = 0; // 当前组合序号
@@ -159,8 +180,9 @@ contract Ethrng {
 
 	// 判断是否被选中
 	function whetherSelected(uint256 numParticipant, uint256 numSelected, uint256 selectedResult)
-		internal returns(bool) {
-			uint256 b = selectedResult >>(numParticipant - numSelected)& 1;
+		internal returns(bool) 
+		{
+			uint256 b = selectedResult >> (numParticipant - numSelected) & 1;
 			if(b == 1)
 				return true;
 			else
@@ -176,11 +198,15 @@ contract Ethrng {
 		flag++;
 	}
 	//检查是否达到目标参与者人数
-	modifier checkTarget(uint256 _target,uint256 _num) {if(_num < _target) throw; _;}
+	modifier checkTarget(uint256 _target,uint256 _num) {
+		if(_num < _target) 
+			throw; 
+		_;}
 
 	// 获取随机数
 	function getRandom(uint256 _campaignID)
-		returns (bytes32) {
+		returns (bytes32) 
+		{
 			Campaign c = campaigns[_campaignID];
 			return returnRandom(c);
 	}
@@ -189,9 +215,10 @@ contract Ethrng {
 		bountyPhase(c.bnum)
 		beConsumer(c.consumers[msg.sender].caddr)
 		checkTarget(c.target,c.number)
-		internal returns (bytes32) {
+		internal returns (bytes32) 
+		{
 			c.settled = true;
-			uint256 numCombination = countCombinationNo(c.number, c.target); // 计算组合数
+			// uint256 numCombination = countCombinationNo(c.number, c.target); // 计算组合数
 			uint campaignshash = uint(block.blockhash(block.number - 1));
 			uint256 selectedResult = selectedCombination(c.number, c.target, campaignshash); // 计算选中结果
 			for(uint256 i = 1; i <= c.number; i++) {
@@ -212,13 +239,13 @@ contract Ethrng {
 		Campaign storage c,
 		Participant storage p)
 		bountyPhase(c.bnum)
-		beFalse(p.rewarded) internal {
+		beFalse(p.rewarded) internal 
+		{
 			uint256 share;
 			if (c.settled) {
 				share = c.bountypot/c.number;
 				returnReward(share, c, p);
-			}
-			else {
+			}else {
 				share = c.bountypot/(10*c.number);
 				returnReward(share, c, p);
 			}
@@ -228,7 +255,8 @@ contract Ethrng {
 		uint256 _share,
 		Campaign storage c,
 		Participant storage p
-		) internal {
+		) internal 
+		{
 			p.reward = _share;
 			p.rewarded = true;
 			if (!msg.sender.send(_share + c.deposit)) {
@@ -245,7 +273,8 @@ contract Ethrng {
 
 	function returnBounty(uint256 _campaignID, Campaign storage c)
 		bountyPhase(c.bnum)
-		beConsumer(c.consumers[msg.sender].caddr) internal {
+		beConsumer(c.consumers[msg.sender].caddr) internal 
+		{
 			if(c.settled)
 				c.consumers[msg.sender].bountypot = 0;
 			else
